@@ -22,13 +22,15 @@ class Player{
 }
 class DiceGame
 {
-  constructor(playername,n1,n2)///*,n3,one,two,three,four,five,six,xxx,xxxx,chance,full,smallstrit,bigstrit,capitan*/)
+  constructor(playername,n1,n2,n3,one)///*,n3,one,two,three,four,five,six,xxx,xxxx,chance,full,smallstrit,bigstrit,capitan*/)
   {
   this.playername = playername;
    this.n1=n1;
    this.n2=n2;
- /*  this.n3=n3;
+   this.n3=n3;
    this.one = one;
+ /* 
+  
    this.two = two;
    this.three = three;
    this.four = four;
@@ -52,11 +54,11 @@ client.on('message', async msg => { // Send message
   if(msg.content === "r i")
   {
     if(GamePlayersCount ==0){
-      P1Player = new DiceGame(msg.author.username,0,0);
+      P1Player = new DiceGame(msg.author.username,0,0,0,0);
       GamePlayersCount ++;
       msg.reply(" Joinned to the game")
     }
-    else if (GamePlayersCount ==1){ GamePlayersCount++; P2Player = new DiceGame(msg.author.username,0,0);msg.reply(" Joined, Game is ready") }
+    else if (GamePlayersCount ==1){ GamePlayersCount++; P2Player = new DiceGame(msg.author.username,0,0,0,0);msg.reply(" Joined, Game is ready") }
     else {return msg.channel.send("Max players joinned to the game already!");}
  
   }
@@ -85,6 +87,11 @@ if(msg.content === ">repeat on"|| msg.content === "r on")
   return msg.channel.send("Repeat on" || msg.content === "r off")
 }
 
+if(msg.content === ">show")
+{
+
+}
+
 if(msg.content.includes(">roll"))
 {
   if(order == 0 && P1Player.playername == msg.author.username)
@@ -95,6 +102,7 @@ if(msg.content.includes(">roll"))
       array.push(rnd(1,6));
     }
     msg.reply(" Rolled: "+array[0]+" "+array[1]+" "+array[2])
+    P1Player.n1 = array[0];  P1Player.n2 = array[1];  P1Player.n3 = array[2];
     order++;
     return;
   }
@@ -106,6 +114,7 @@ if(msg.content.includes(">roll"))
       array.push(rnd(1,6));
     }
     msg.reply(" Rolled: "+array[0]+" "+array[1]+" "+array[2])
+    P2Player.n1 = array[0];  P1Player.n2 = array[1];  P1Player.n3 = array[2];
     order--;
     return;
   }
@@ -118,12 +127,13 @@ if(msg.content.includes(">roll"))
 if(msg.content ==="em"){EmbedDice();}
 function EmbedDice()
 {
+  if(msg.author.username == P1Player.name)
   var Embed = new Discord.MessageEmbed()
   .setColor('#0099ff')
   .setTitle(msg.author.username)
   .addFields
   (
-    {name: "Jedynki",inline:true},
+    {name: "Jedynki",value: " "+P1Player.one ,inline:true},
     {name: "Dwójki", inline:true},
     {name: "Trójki", inline:true},
     {name: "Czwrórki", inline:true},
@@ -138,9 +148,9 @@ function EmbedDice()
     {name:"Szansa ",inline:true}
 
   );
-
   return msg.channel.send(Embed)
 }
+
 
 
 
