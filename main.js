@@ -3,6 +3,8 @@ const client = new Discord.Client();
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 var bones = require('./bgame');
+const { send } = require('process');
+const { FORMERR } = require('dns');
 
  // When ready tell me 
 client.on('ready', () => {
@@ -12,195 +14,317 @@ client.on('ready', () => {
 let voiceChannel;
 let dispatcher;
 var repeat = false;
-
-class Player{
-  constructor(name,money){
-    this.name=name;
-    this.money=money;
-
-  }
-}
 class DiceGame
 {
-  constructor(playername,n1,n2,n3,one)///*,n3,one,two,three,four,five,six,xxx,xxxx,chance,full,smallstrit,bigstrit,capitan*/)
+  constructor(playername,n1,n2,n3,n4,n5,one,two,three,four,five,six,score,chance,xxx,xxxx,full,small,big,general)///*,n3,onexxx,xxxx,chance,full,smallstrit,bigstrit,capitan*/)
   {
-  this.playername = playername;
+   this.playername = playername;
    this.n1=n1;
    this.n2=n2;
    this.n3=n3;
+   this.n4=n4;
+   this.n5=n5;
    this.one = one;
- /* 
-  
    this.two = two;
    this.three = three;
    this.four = four;
    this.five= five;
    this.six = six;
+   this.score = score;
    this.chance = chance;
-   this.xxx= xxx;
+   this.xxx = xxx;
    this.xxxx = xxxx;
-   this.full = full;
-   this.smallstrit = smallstrit;
-   this.bigstrit = bigstrit;
-   this.captian = capitan;*/
+   this.full= full;
+   this.small = small;
+   this.big = big;
+   this.general = general;
   }
 }
-const _player = [];
-var P1Player;
-var P2Player;
-var GamePlayersCount =0;
-var order = 0;
-client.on('message', async msg => { // Send message
-  if(msg.content === "r i")
-  {
-    if(GamePlayersCount ==0){
-      P1Player = new DiceGame(msg.author.username,0,0,0,0);
-      GamePlayersCount ++;
-      msg.reply(" Joinned to the game")
-    }
-    else if (GamePlayersCount ==1){ GamePlayersCount++; P2Player = new DiceGame(msg.author.username,0,0,0,0);msg.reply(" Joined, Game is ready") }
-    else {return msg.channel.send("Max players joinned to the game already!");}
- 
-  }
-
- if(msg.content.startsWith(">j"))
- {
-    voiceChannel = msg.member.voice.channel;
-    msg.delete();
-    var path = msg.content.substring(3);
-    if(path == "rushia"){path="https://www.youtube.com/watch?v=CdnjygHpi-Q&ab_channel=AnJing";}
-    if(!msg.member.voice.channel) {return msg.reply("Join voice channel first !") }
-      PlayAudio(path);
-      path = null;
-    }
-if(msg.content === ">pause" || msg.content ==="p")
+var _PlayerCount = 0;
+var order = -1;
+var player = [];
+let rd=0;
+client.on('message', async msg =>
+{ 
+function Send(Data){msg.channel.send(Data)}
+var command = msg.content;                                        
+function AddPlayer(){player.push(new DiceGame(msg.author.username,0,0,0,0,0,false,false,false,false,false,false,0,false,false,false,false,false,false,false));}
+function NextTurn()
 {
-  return dispatcher.pause();
+  if(rd ==13){return Restart();}
+  order++;
+  if(order == 2){order= 0}
+  roll();
+  EmbedDice();
+  rd++;
 }
-if(msg.content ===">resume" || msg.content ==="r")
+function roll()
 {
-  return dispatcher.resume();
+  player[order].n1 = rnd(1,6); player[order].n2 = rnd(1,6); player[order].n3 = rnd(1,6); player[order].n4 = rnd(1,6); player[order].n5 = rnd(1,6);
 }
-if(msg.content === ">repeat on"|| msg.content === "r on")
-{
-  repeat = true;
-  return msg.channel.send("Repeat on" || msg.content === "r off")
-}
-
-if(msg.content === ">show")
-{
-
-}
-
-if(msg.content.includes(">roll"))
-{
-  if(order == 0 && P1Player.playername == msg.author.username)
-  {
-    let array = []
-    for(var i=0;i<3;i++)
-    {
-      array.push(rnd(1,6));
-    }
-    msg.reply(" Rolled: "+array[0]+" "+array[1]+" "+array[2])
-    P1Player.n1 = array[0];  P1Player.n2 = array[1];  P1Player.n3 = array[2];
-    order++;
-    return;
-  }
-  if(order == 1 && P2Player.playername == msg.author.username)
-  {
-    let array = []
-    for(var i=0;i<3;i++)
-    {
-      array.push(rnd(1,6));
-    }
-    msg.reply(" Rolled: "+array[0]+" "+array[1]+" "+array[2])
-    P2Player.n1 = array[0];  P1Player.n2 = array[1];  P1Player.n3 = array[2];
-    order--;
-    return;
-  }
-
-  else{return msg.reply(" Its not your turn!")}
-    
-}
-
-
-if(msg.content ==="em"){EmbedDice();}
 function EmbedDice()
 {
-  if(msg.author.username == P1Player.name)
   var Embed = new Discord.MessageEmbed()
   .setColor('#0099ff')
-  .setTitle(msg.author.username)
+  .setTitle("**"+player[order].playername+"**"+" Score: "+player[order].score)
   .addFields
   (
-    {name: "Jedynki",value: " "+P1Player.one ,inline:true},
-    {name: "Dwójki", inline:true},
-    {name: "Trójki", inline:true},
-    {name: "Czwrórki", inline:true},
-    {name: "Piątki", inline:true},
-    {name: "Szóstki", inline:true},
+    {name: "Jedynki",value: player[order].one ,inline:true},
+    {name: "Dwójki",value: player[order].two , inline:true},
+    {name: "Trójki",value: player[order].three , inline:true},
+    {name: "Czwrórki",value: player[order].four , inline:true},
+    {name: "Piątki",value: player[order].five , inline:true},
+    {name: "Szóstki",value: player[order].six , inline:true},
     {name:"============================", value:"\u200B"}, // '\u200B' make space
-    {name:"3 jednakowe ",inline:true},
-    {name:"4 jednakowe ",inline:true},
-    {name:"Mały strit ",inline:true},
-    {name:"Duży strit ",inline:true},
-    {name:"Generał ",inline:true},
-    {name:"Szansa ",inline:true}
-
-  );
+    {name:"3 jednakowe ",value: player[order].xxx,inline:true},
+    {name:"4 jednakowe ",value: player[order].xxxx ,inline:true},
+    {name:"Mały strit ",value: player[order].small ,inline:true},
+    {name:"Duży strit ",value: player[order].big ,inline:true},
+    {name:"Generał ",value: player[order].general ,inline:true},
+    {name:"Szansa ",value: player[order].chance ,inline:true},
+    {name:"============================", value:"\u200B"},
+    {name:player[0].playername+" Points: " +player[0].score, value:"\u200B"},
+    {name:player[1].playername+" Points: " +player[1].score, value:"\u200B"},
+  )
+  .addFields(
+    {name:"============================", value:"\u200B"},
+    {name: "          ** It's "+player[order].playername+" turn! **", value: "\u200B"},
+    {name: "            **"+player[order].playername +
+    " Rolled: "+player[order].n1+" "+player[order].n2+" "+player[order].n3+" "+player[order].n4+" "+player[order].n5+" "+"**", value: "\u200B"},);
   return msg.channel.send(Embed)
 }
-
-
-
-
-if(msg.content ==="y con")  // Make an api to yande.re 
+function Restart()
 {
-  var request = new XMLHttpRequest()
-  request.open('GET', 'https://yande.re/post.xml?limit=1', true)
-  request.onload = function () {
-    console.log("yaa");
+  player = [];
+  _PlayerCount=0;
+  order = -1;
+  rd=0;
+}
+function CheckNumer(x) // Check if the same 
+{
+  let b=0;
+   if(player[order].n1== x)
+   {
+    b++;
+   }
+   if(player[order].n2== x)
+   {
+    b++;
+   }
+   if(player[order].n3== x)
+   {
+    b++;
+   }
+   if(player[order].n4== x)
+   {
+    b++;
+   }
+   if(player[order].n5== x)
+   {
+    b++;
+   }
+   return b;
+}
+if(command == 'r')
+{
+  if(_PlayerCount == 0) {AddPlayer(); Send(msg.author.username+" Joined to the game")}
+  if(_PlayerCount == 1) {AddPlayer(); Send(msg.author.username+" Joined to the game. All players ready !"); NextTurn();}
+  if(_PlayerCount == 2) {return Send("Max players" + player.length)}
+  _PlayerCount++;
+}
+if(command.includes("k"))
+{
+ 
+  let fixed = command.substring(2);
+  if(msg.author.username != player[order].playername) { return Send("Its not your turn!")}
+  let ns = false;
+  switch(fixed)
+  {
+    case 'one':
+      {
+        if(player[order].one ==true){return ns = true;}
+        player[order].one = true;
+        player[order].score +=  CheckNumer(1) * 1;
+        break;
+      }
+    case 'two':
+      {
+        if(player[order].two ==true){return ns = true;}
+        player[order].two = true;
+        player[order].score +=  CheckNumer(2) *2;
+        break;
+      }
+    case 'three':
+      {
+        if(player[order].three ==true){return ns = true;}
+        player[order].three = true;
+        player[order].score +=  CheckNumer(3) *3;
+        break;
+      }
+    case 'four':
+      {
+        if(player[order].four ==true){return ns = true;}
+        player[order].four = true;
+        player[order].score +=  CheckNumer(4) *4;
+        break;
+      }
+     case 'five':
+       {
+        if(player[order].five ==true){return ns = true;}
+        player[order].five = true;
+        player[order].score +=  CheckNumer(5) *5;
+        break;
+       }
+     case 'six':
+       {
+        if(player[order].six ==true){return ns = true;}
+        player[order].six = true;
+        player[order].score +=  CheckNumer(6) *6;
+        break;
+       }
+    case 'xxx':
+       {
+        if(player[order].xxx ==true){return ns = true;}
+        player[order].xxx = true;
+          for(var i =1;i<7;i++)
+          {
+            let x = CheckNumer(i)
+            if(x >= 3)
+            {
+              player[order].score += parseInt(player[order].n1+player[order].n2+player[order].n3+player[order].n4+player[order].n5) ;
+              break;
+            }
+            else{ }
+          }
+          break;
+       }
+     case 'xxxx':
+       {
+        if(player[order].xxxx ==true){return ns = true;}
+        player[order].xxxx = true;
+          for(var i =1;i<7;i++)
+          {
+            let x = CheckNumer(i)
+            if(x >= 4)
+            {
+              player[order].score += parseInt(player[order].n1+player[order].n2+player[order].n3+player[order].n4+player[order].n5) ;
+              break;
+            }
+            else{ }
+          }
+          break;
+       }
+      case 'full':
+        {
+          if(player[order].full ==true){return ns = true;}
+          player[order].full = true;
+          let NumberX =0;
+          let NumberY =0;
+          for(var i =1;i<7;i++)
+          {
+            let x = CheckNumer(i)
+            console.log("x"+i);
+            if(x == 3)
+            {
+                NumberX = i
+                console.log("x pass")
+                break;
+            }
+          }
+          for(var i=1;i<7;i++)
+          {
+            if (i == NumberX){i++}
+            let y = CheckNumer(i)
+            console.log("y"+i);
+            if(y ==2)
+            {
+              NumberY = i;
+              console.log("y pass")
+              break;
+            }
+          }
+          if(NumberX >0 && NumberY >0){ player[order].score += 25;}
+          break;
+        }
+      case 'small':
+        {
+          if(player[order].small ==true){return ns = true;}
+          player[order].small =true
+          let y=0;
+          let x=1;
+          for(var i =1;i<7;i++)
+          {
+            let a = CheckNumer(i);
+            if(a >0)
+            {
+              y++;
+            }
+          }
+          if(y >= 4)
+          {
+            player[order].score +=30;
+          }
+          console.log(y);
+          break;          
+        }
+      case 'big':
+        {
+          if(player[order].big ==true){return ns = true;}
+          player[order].big =true
+          let y=0;
+          let x=1;
+          for(var i =1;i<7;i++)
+          {
+            let a = CheckNumer(i);
+            if(a >0)
+            {
+              y++;
+            }
+          }
+          if(y > 4)
+          {
+            player[order].score +=40;
+          }
+          console.log(y);
+          break;          
+        }
+      case 'chance':
+        {
+          if(player[order].chance ==true){return ns = true;}
+          player[order].chance =true;
+          player[order].score +=  50;
+        }
+      case 'general':
+        {
+          if(player[order].general ==true){return ns = true;}
+          player[order].general =true;
+          for(var i =1;i<7;i++)
+          {
+            let x = CheckNumer(i);
+            if(x ==5)
+            {
+              player[order].score +=  player[order].n1+player[order].n2+player[order].n3+player[order].n4+player[order].n5;
+            }
+          }
+        }
+      default: ns = true; break;
   }
+  
+  if(ns == false){return NextTurn();}
 }
 
-else if (msg.content ===">repeat off"){ repeat =false; return msg.channel.send("Repeat off")}
+if(command =='full')
+{
+  player[order].n1 = 1;
+  player[order].n2 = 2;
+  player[order].n3 = 3;
+  player[order].n4 = 4;
+  player[order].n5 = 5;
 
-function Send(Data){
-  msg.channel.send(Data);
 }
 });
 client.login('Nzk1NzU1NzIxOTExNTY2MzY2.X_N_RA.ngqL-I1LZU7AxBQZSJmbuHvuwJs');
 
-function PlayAudio(path)    // Play audio using ffmpg and @optus
-{
-  var fixedpath = path;
-    voiceChannel.join().then(connection => 
-   { 
-      dispatcher = connection.play(ytdl(path, {volume: 0.001}));
-      if(repeat == true){
-        dispatcher.on('finish', end => {PlayAudio(fixedpath)});
-        console.log("r true");
-      }
-      else{console.log("r false");}
-    })
-}
-function Save()                             // Still shit not working
-{
-  let a=0;
-  try
-  {
-    for(var i=0;i<_player.length;i++)
-    {
-      console.log(_player[a].name)
-      fs.writev("data.txt", _player[a].name, function(err){
-        if(err) console.log(err);
-       
-      });
-      
-    }
-  }
-  catch(err){console.log(err);}
-}
 function rnd(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
