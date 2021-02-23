@@ -323,7 +323,7 @@ if(command =='full')
 
 }
 });
-client.login('Nzk1NzU1NzIxOTExNTY2MzY2.X_N_RA.ngqL-I1LZU7AxBQZSJmbuHvuwJs');
+client.login('');
 
 function rnd(min, max) {
   min = Math.ceil(min);
